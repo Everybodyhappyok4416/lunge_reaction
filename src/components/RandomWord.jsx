@@ -8,26 +8,38 @@ const ARROW_PARTS = [
   { normal: "↘︎", reverse: "↖︎" },
   { normal: "↙︎", reverse: "↗︎" },
   { normal: "←", reverse: "→" },
-  { normal: "→", reverse: "←" }
+  { normal: "→", reverse: "←" },
 ];
 
 const RandomWord = ({ count, isBlackNormal, onFinish }) => {
   // 初期値をオブジェクトにしておくことで、初回レンダリング時のエラーを防ぐ
-  const [displayData, setDisplayData] = useState({ displayText: "", color: "black" });
+  const [displayData, setDisplayData] = useState({
+    displayText: "",
+    color: "black",
+  });
   const [step, setStep] = useState(0);
   const lastText = useRef("");
 
   const getNextState = useCallback(() => {
-    // 前回と同じ矢印（表示結果）が出ないようにフィルタリング（連続防止）
-    let validOptions = ARROW_PARTS;
-    
-    // ランダムに1つ選択
-    const selectedArrow = validOptions[Math.floor(Math.random() * validOptions.length)];
+    // 1. 前回と違う「normal」を持つ矢印に絞る
+    const availableOptions = ARROW_PARTS.filter(
+      (arrow) => arrow.normal !== lastText.current,
+    );
+
+    // 2. 絞り込まれた中からランダムに選択
+    const selectedArrow =
+      availableOptions[Math.floor(Math.random() * availableOptions.length)];
+
+    // 3. 次回のために、選択した矢印を「前回の値」として保存
+    lastText.current = selectedArrow.normal;
+
     const color = Math.random() > 0.5 ? "black" : "red";
 
-    // 反転ロジック
+    // 4. 反転ロジック
     const isNormalMode = isBlackNormal ? color === "black" : color === "red";
-    const displayText = isNormalMode ? selectedArrow.normal : selectedArrow.reverse;
+    const displayText = isNormalMode
+      ? selectedArrow.normal
+      : selectedArrow.reverse;
 
     return { displayText, color };
   }, [isBlackNormal]);
@@ -55,10 +67,10 @@ const RandomWord = ({ count, isBlackNormal, onFinish }) => {
   return (
     <div
       className="fullscreen-text"
-      style={{ 
-        color: displayData.color, 
+      style={{
+        color: displayData.color,
         fontSize: "10rem", // 矢印は見やすさ重視でさらに巨大化
-        fontWeight: "900" 
+        fontWeight: "900",
       }}
     >
       {displayData.displayText}
